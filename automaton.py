@@ -1,8 +1,4 @@
 from state import State
-import networkx as nx
-import matplotlib.pyplot as plt
-import sys
-
 
 class Automaton():
     # Constructor for the Automaton class.
@@ -73,61 +69,61 @@ class Automaton():
 # visualizing the automaton
 
     def graph(self):
-        graphLabels = {" ": "ε", "z": "a-z", "9": "0-9", ".": "<dot>"}
+        from visual_automata.fa.nfa import VisualNFA
+        from forbiddenfruit import curse
+        from frozendict import frozendict
+        import copy
 
-        # graph the automaton using networkx and matplotlib
-        G = nx.DiGraph()
+        def deepcopy(self: frozendict) -> frozendict:
+            return copy.deepcopy(self)
+        
+        curse(frozendict, "deepcopy", deepcopy)
 
-        initialState = self.state
+        def pop(self: str) -> str:
+            last_char = self[-1]
+            self = self[:-1]
+            return last_char
+        
+        curse(str, "pop", pop)
 
-        # add the initial state
-        G.add_node(initialState.name)
-
-        def addEdges(state: State):
-            for symbol, nextState in state.transitions.items():
-                G.add_edge(state.name,
-                           nextState.name,
-                           label=graphLabels.get(symbol, symbol),
-                           final=nextState.isFinal)
-
-        def traverse(state: State, visited: set):
-            if state in visited:
+        states: set[State] = set()
+        def traverse(state: State):
+            if state in states:
                 return
-            visited.add(state)
-            addEdges(state)
+            states.add(state)
             for _, nextState in state.transitions.items():
-                traverse(nextState, visited)
+                for state in nextState:
+                    traverse(state)
 
-        sys.setrecursionlimit(10000)  # Increase recursion limit
-        traverse(initialState, set())
+        traverse(self.state)
 
-        # show the graph
-        pos = nx.spring_layout(G, k=10)  # Increase k value for more spacing
-        nx.draw(G,
-                pos,
-                with_labels=True,
-                node_size=330,
-                node_color="skyblue",
-                font_size=6,
-                font_color="black",
-                arrowsize=5)
-        edge_labels = nx.get_edge_attributes(G, 'label')
+        all_symbols = set()
+        for state in states:
+            all_symbols.update(state.transitions.keys())
 
-        # this will be a dict[(node1, node2)] = bool denoting if the edge is final
-        final_edges = nx.get_edge_attributes(G, 'final')
-        final_nodes = set()
-        nonfinal_nodes = set()
-        for edge, is_final in final_edges.items():
-            if is_final:
-                final_nodes.add(edge[0])
-            else:
-                nonfinal_nodes.add(edge[0])
+        transitions = {}
+        for state in states:
+            transitions[state.name] = {}
+            for symbol in all_symbols:
+                nextStates = state.getNextState(symbol)
+                if nextStates is not None:
+                    if len(nextStates) == 1:
+                        transitions[state.name][symbol] = nextStates[0].name
+                    else:
+                        transitions[state.name][symbol] = [nextState.name for nextState in nextStates]
 
-        print("Final Nodes:", final_nodes)
-        print("Nonfinal Nodes:", nonfinal_nodes)
+    
 
-        nx.draw_networkx_edge_labels(
-            G, pos, edge_labels=edge_labels, font_size=6,
-            label_pos=0.3)  # Adjust label_pos to change the position of the labels
-        plt.savefig("automaton.png", dpi=300)
-        plt.clf()  # Clear the current figure
+        final_states = set([state.name for state in states if state.isFinal])
+
+
+        nfa = VisualNFA(
+            states=set([state.name for state in states]),
+            input_symbols=all_symbols,
+            transitions=transitions,
+            initial_state="S",
+            final_states=final_states
+        )
+
+        
+        nfa.show_diagram(filename="automaton")
