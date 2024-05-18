@@ -126,4 +126,4 @@ class Automaton():
         )
 
         
-        nfa.show_diagram(filename="automaton")
+        return nfa.show_diagram(filename="automaton")
