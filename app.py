@@ -45,13 +45,15 @@ ui.input_text_area(
     rows=10,
 )
 
+ui.p("La generación de la primera imagen puede tardar un poco, por favor sea paciente.")
+
 @render.image
 def image():
   try:
-    plot(input.caption_regular())
+    plot(str(input.caption_regular()).strip())
   except:
     # if it fails, its fine, just render the default image
-    pass
+    raise Exception("Error al generar la imagen. Las reglas de producción no son válidas.")
   img = {"src": "./automaton.png", "width": "400px"}
   return img
 
