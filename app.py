@@ -40,8 +40,9 @@ def plot(string: str):
 
 ui.input_text_area(
     "caption_regular",
-    "Caption:",
-    "S -> aA\nS -> bB\nA -> bB\nA -> c\nB -> ε",
+    "Convertir reglas de producción a gráfica de NFA:",
+    "S -> a",
+    rows=10,
 )
 
 @render.image
